@@ -6,10 +6,11 @@ using UnityEngine;
 
 namespace XNodeEditor {
     /// <summary> Base class to derive custom Node editors from. Use this to create your own custom inspectors and editors for your nodes. </summary>
-
     [CustomNodeEditor(typeof(XNode.Node))]
     public class NodeEditor : XNodeEditor.Internal.NodeEditorBase<NodeEditor, NodeEditor.CustomNodeEditorAttribute, XNode.Node> {
 
+        private readonly Color DEFAULTCOLOR = new Color32(90, 97, 105, 255);
+        
         /// <summary> Fires every whenever a node was modified through the editor </summary>
         public static Action<XNode.Node> onUpdateNode;
         public readonly static Dictionary<XNode.NodePort, Vector2> portPositions = new Dictionary<XNode.NodePort, Vector2>();
@@ -48,15 +49,18 @@ namespace XNodeEditor {
         public virtual int GetWidth() {
             Type type = target.GetType();
             int width;
-            if (NodeEditorWindow.nodeWidth.TryGetValue(type, out width)) return width;
+            if (type.TryGetAttributeWidth(out width)) return width;
             else return 208;
         }
 
+        /// <summary> Returns color for target node </summary>
         public virtual Color GetTint() {
+            // Try get color from [NodeTint] attribute
             Type type = target.GetType();
             Color color;
-            if (NodeEditorWindow.nodeTint.TryGetValue(type, out color)) return color;
-            else return Color.white;
+            if (type.TryGetAttributeTint(out color)) return color;
+            // Return default color (grey)
+            else return DEFAULTCOLOR;
         }
 
         public virtual GUIStyle GetBodyStyle() {
@@ -80,13 +84,13 @@ namespace XNodeEditor {
             // Custom sctions if only one node is selected
             if (Selection.objects.Length == 1 && Selection.activeObject is XNode.Node) {
                 XNode.Node node = Selection.activeObject as XNode.Node;
-                NodeEditorWindow.AddCustomContextMenuItems(menu, node);
+                menu.AddCustomContextMenuItems(node);
             }
         }
 
         /// <summary> Rename the node asset. This will trigger a reimport of the node. </summary>
         public void Rename(string newName) {
-            if (newName == null || newName.Trim() == "") newName = UnityEditor.ObjectNames.NicifyVariableName(target.GetType().Name);
+            if (newName == null || newName.Trim() == "") newName = NodeEditorUtilities.NodeDefaultName(target.GetType());
             target.name = newName;
             AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(target));
         }
