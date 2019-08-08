@@ -164,7 +164,7 @@ namespace XNode {
                 int i = 0;
                 while (HasPort(fieldName)) fieldName = "dynamicInput_" + (++i);
             } else if (HasPort(fieldName)) {
-                Debug.LogWarning("Port '" + fieldName + "' already exists in " + name, this);
+//                Debug.LogWarning("Port '" + fieldName + "' already exists in " + name, this);
                 return ports[fieldName];
             }
             NodePort port = new NodePort(fieldName, type, direction, connectionType, typeConstraint, this);
